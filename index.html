@@ -378,6 +378,19 @@
                         </button>
                     </form>
                 </section>
+                <!-- 5b — PAYMENT-METHOD CHOICE -->
+                <section id="payment-method-screen"
+                         class="screen flex flex-col items-center space-y-4 w-full max-w-lg">
+                  <h2 class="text-2xl font-bold text-gray-800 mb-4">Choose a payment method</h2>
+                
+                  <button data-method="card"   class="primary-btn">Credit / Debit Card</button>
+                  <button data-method="paypal" class="secondary-btn">PayPal</button>
+                  <button data-method="affirm" class="secondary-btn">Pay-in-4 (Affirm)</button>
+                
+                  <p class="text-xs text-gray-500 max-w-xs text-center pt-2">
+                    Selecting an option will take you to the appropriate secure checkout flow.
+                  </p>
+                </section>
 
                 <!-- 6 — PAYMENT INFORMATION -->
                 <section id="payment-info-screen" class="screen flex-col items-center space-y-4 w-full max-w-lg">
@@ -799,7 +812,7 @@
                     return false;
                 }
                 hideFieldError(inputElement); // Hide if it was just empty but now has input
-
+            
                 // 2. Check for format based on type or custom regex
                 if (inputElement.value.trim() !== '') { // Only validate format if not empty
                     switch (type) {
@@ -818,7 +831,7 @@
                         case 'city':
                             if (!/^[A-Za-z\s.'-]+$/.test(inputElement.value.trim())) {
                                 isValid = false;
-                                message = "Please enter a valid city name.";
+                                message = "Please enter a valid city name(letters and spaces only).";
                             }
                             break;
                         case 'state':
@@ -877,7 +890,37 @@
                 return isValid;
             }
 
-
+            // after your big const block –––––
+            const paymentMethodScreen = S('payment-method-screen');
+            const methodButtons       = paymentMethodScreen.querySelectorAll('button[data-method]');
+            
+            // show Payment-Method screen after shipping OK
+            shippingForm.addEventListener('submit', e => {
+              e.preventDefault();
+              if (validateFormOnSubmit('shipping-form-desktop')) {
+                navigateTo('payment-method-screen');
+              }
+            });
+            
+            // button handler
+            methodButtons.forEach(btn => {
+              btn.addEventListener('click', () => {
+                const method = btn.dataset.method;
+                if (method === 'card') {
+                  // default flow you already have
+                  billingAddressFields.classList.toggle('hidden', !billingDifferentRadio.checked);
+                  navigateTo('payment-info-screen');
+                } else if (method === 'paypal') {
+                  showMessage('Redirecting to PayPal …');
+                  // stub: replace with real redirect later
+                  setTimeout(() => navigateTo('confirmation-screen'), 1200);
+                } else if (method === 'affirm') {
+                  showMessage('Opening Affirm modal (mock) …');
+                  setTimeout(() => navigateTo('confirmation-screen'), 1200);
+                }
+              });
+            });
+            
             function validateFormOnSubmit(formId) {
                 let formIsValid = true; // Overall validity for the form submission
                 let hasAnyError = false; // Tracks if any error (required or format) occurred in this submission
@@ -999,6 +1042,51 @@
                 }
                 return formIsValid;
             }
+            /* ===== Live red-border feedback as you type ===== */
+            const typeLookup = {
+              'full-name-desktop'      : 'fullName',
+              'address-line1-desktop'  : 'addressLine1',
+              'city-desktop'           : 'city',
+              'state-desktop'          : 'state',
+              'zip-code-desktop'       : 'zipCode',
+              'card-number-desktop'    : 'cardNumber',
+              'expiry-date-desktop'    : 'expiryDate',
+              'cvc-desktop'            : 'cvc',
+              'card-name-desktop'      : 'cardName'
+            };
+            function attachLiveValidation(inputs){
+              inputs.forEach(inp=>{
+                inp.addEventListener('input', ()=>{
+                  const t = typeLookup[inp.id];
+                  if(!t) return;                         // safety
+                  validateField(inp, inp.nextElementSibling, t, true);
+                });
+              });
+            }
+            attachLiveValidation(shippingFormInputs);
+            attachLiveValidation(paymentFormInputs);
+            
+            function attachRealtimeValidation(input, type, errorEl) {
+  input.addEventListener('blur', () => {
+    validateField(input, errorEl, type, input.hasAttribute('required'));
+  });
+}
+
+// SHIPPING FIELDS
+attachRealtimeValidation(fullNameInput,   'fullName',   fullNameError);
+attachRealtimeValidation(addressLine1Input,'addressLine1',addressLine1Error);
+attachRealtimeValidation(cityInput,      'city',       cityError);
+attachRealtimeValidation(stateInput,     'state',      stateError);
+attachRealtimeValidation(zipCodeInput,   'zipCode',    zipCodeError);
+
+// PAYMENT FIELDS
+attachRealtimeValidation(cardNumberInput,'cardNumber', cardNumberError);
+attachRealtimeValidation(expiryDateInput,'expiryDate', expiryDateError);
+attachRealtimeValidation(cvcInput,       'cvc',        cvcError);
+attachRealtimeValidation(cardNameInput,  'cardName',   cardNameError);
+
+// same for billing-address inputs if you like
+
 
             // --- Input Change Listeners for Button Disabling ---
             function setupFormValidationListeners(formInputs, submitButton, isBillingForm = false) {
@@ -1069,19 +1157,6 @@
             returnToGuestCheckoutBtn.addEventListener('click', () => {
                 navigateTo('checkout-options-screen');
                 analytics.track('cta_click', { cta_id: 'return_to_guest_checkout', step: 'login_signup' });
-            });
-
-            shippingForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                // Perform full validation on submit
-                if (validateFormOnSubmit('shipping-form-desktop')) {
-                    // Populate review screen shipping info
-                    document.getElementById('review-shipping-name').textContent = fullNameInput.value;
-                    document.getElementById('review-shipping-address1').textContent = `${addressLine1Input.value}, ${S('address-line2-desktop').value || ''}`;
-                    document.getElementById('review-shipping-address2').textContent = `${cityInput.value}, ${stateInput.value.toUpperCase()} ${zipCodeInput.value}`; // Ensure state is uppercase for review
-                    navigateTo('payment-info-screen');
-                    analytics.track('cta_click', { cta_id: 'continue_to_payment', step: 'shipping_info' });
-                }
             });
 
             paymentForm.addEventListener('submit', (e) => {
