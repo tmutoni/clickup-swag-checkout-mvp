@@ -3,130 +3,373 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ClickUp Swag Checkout — MVP</title>
+  <title>ClickUp Swag Checkout – MVP</title>
+
+  <!-- Tailwind (v3 CDN, fine for demo/gh‑pages) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
   <style>
-    /* …—— global styles exactly as before ——… */
-    body{font-family:'Inter',sans-serif;background:#f0f2f5}
-    /* scrollbar & stacked screens */
-    ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
-    ::-webkit-scrollbar-thumb{background:#888;border-radius:10px}::-webkit-scrollbar-thumb:hover{background:#555}
-    .screen{display:none;flex-direction:column;position:absolute;inset:0;overflow-y:auto;padding:0 1rem}
+    /* ‑‑‑ Base look & feel ‑‑‑ */
+    body{font-family:"Inter",sans-serif;background:#f0f2f5}
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
+    ::-webkit-scrollbar-thumb{background:#888;border-radius:10px}
+    ::-webkit-scrollbar-thumb:hover{background:#555}
+
+    /* ‑‑‑ Screen stacking model ‑‑‑ */
+    .screen{display:none;flex-direction:column;width:100%;position:absolute;inset:0;overflow-y:auto;padding:0 1rem;box-sizing:border-box}
     .screen.active{display:flex;z-index:1}
-    /* buttons, inputs, etc — unchanged — */
-    .primary-btn{width:100%;max-width:320px;height:56px;display:flex;align-items:center;justify-content:center;background:#6B46C1;color:#fff;font-size:18px;font-weight:600;border:none;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.06);transition:background .3s,transform .3s}
+
+    /* ‑‑‑ Buttons (no @apply) ‑‑‑ */
+    .primary-btn,.secondary-btn{max-width:320px;height:56px;display:flex;align-items:center;justify-content:center;font-weight:600;transition:.3s}
+    .primary-btn{width:100%;background:#6B46C1;color:#fff;font-size:18px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
     .primary-btn:hover{background:#5531b4;transform:scale(1.04)}
-    .primary-btn:disabled{background:#b1a0e0;cursor:not-allowed;box-shadow:none}
-    .secondary-btn{width:100%;max-width:320px;height:56px;display:flex;align-items:center;justify-content:center;background:#fff;color:#6B46C1;font-weight:600;font-size:16px;border:2px solid #6B46C1;border-radius:16px;box-shadow:0 2px 6px rgba(0,0,0,.04);transition:background .3s,transform .3s}
+    .primary-btn:disabled{background:#b1a0e0;cursor:not-allowed;transform:none;box-shadow:none}
+    .secondary-btn{width:100%;background:#fff;color:#6B46C1;font-size:16px;border:2px solid #6B46C1;border-radius:16px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
     .secondary-btn:hover{background:#f3e9ff;transform:scale(1.04)}
-    /* …the remainder of your CSS is unchanged … */
+    .edit-btn{padding:.5rem 1rem;background:#e9ddff;color:#6B46C1;font-weight:600;border-radius:12px;font-size:14px;transition:.2s}
+    .edit-btn:hover{background:#d6c6ff}
+
+    /* ‑‑‑ Inputs + errors ‑‑‑ */
+    .form-input{padding:.75rem 1rem;border:1px solid #d1d5db;border-radius:.5rem;width:100%}
+    .form-input:focus{outline:none;border-color:#6B46C1;box-shadow:0 0 0 1px #6B46C1}
+    .form-input.border-red-500{border-color:#ef4444}
+    .field-error{display:none;color:#e11d48;font-size:14px;margin-top:.25rem}
+
+    /* ‑‑‑ Split‑pane on ≥ 768 px ‑‑‑ */
+    @media(min-width:768px){
+      .desktop-layout{display:flex}
+      .desktop-main{flex:1;padding:2rem;position:relative;height:100%;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+      .desktop-sidebar{width:33.333%;padding:2rem;background:#f0f2f5;border-left:1px solid #e5e7eb;display:flex;flex-direction:column;align-items:center}
+      .primary-btn,.secondary-btn{margin-inline:auto}
+    }
   </style>
 </head>
+
 <body class="min-h-screen flex items-center justify-center p-4">
-  <!-- APP container -->
+  <!-- ─────────── APP CONTAINER ─────────── -->
   <div id="app" class="bg-white rounded-3xl shadow-xl overflow-hidden w-full max-w-5xl h-[90vh] flex flex-col">
-    <!-- header -->
+    <!-- Header -->
     <header class="flex items-center justify-between p-4">
-      <button id="back-btn" class="text-2xl font-bold text-gray-500" aria-label="Go back">&larr;</button>
-      <h1 id="header-title" class="text-xl font-semibold">Featured ClickUp Branded Swag</h1>
+      <button id="back-btn" class="text-2xl font-bold text-gray-500" aria-label="Go back">&larr;</button>
+      <h1 id="header-title" class="text-xl font-semibold">Featured ClickUp Branded Swag</h1>
       <div class="w-6"></div>
     </header>
-    <!-- MAIN split -->
-    <main id="screen-container" class="flex-grow overflow-hidden desktop-layout">
-      <!-- flow screens (left) -->
+
+    <!-- Main split -->
+    <main id="screen-container" class="flex-grow overflow-y-auto desktop-layout">
+      <!-- LEFT – flow screens -->
       <div class="desktop-main">
-        <!-- 1 — product-listing (active)...  (content unchanged) -->
-        <section id="product-listing-screen" class="screen active"> … </section>
-        <!-- 2 — product‑detail -->
-        <section id="product-detail-screen" class="screen"> … </section>
-        <!-- 3 — cart -->
-        <section id="cart-screen" class="screen"> … </section>
-        <!-- 4 — checkout options -->
-        <section id="checkout-options-screen" class="screen"> … </section>
-        <!-- 4a — login/signup -->
-        <section id="login-signup-screen" class="screen"> … </section>
-        <!-- 5 — shipping info -->
-        <section id="shipping-info-screen" class="screen"> … </section>
-        <!-- 5b — NEW payment-method chooser -->
-        <section id="payment-method-screen" class="screen flex flex-col items-center space-y-4 w-full max-w-lg">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">Choose a payment method</h2>
-          <button data-method="card"   class="primary-btn">Credit / Debit Card</button>
+        <!-- 1 ─ Product listing -->
+        <section id="product-listing-screen" class="screen active items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Featured Swag</h2>
+          <p class="text-gray-600 text-center text-sm mb-4">Available to shop online only at the moment.</p>
+          <div class="w-full bg-white rounded-xl shadow-md overflow-hidden">
+            <img src="https://placehold.co/600x300/6B46C1/FFFFFF?text=ClickUp+T‑Shirt" alt="ClickUp T‑Shirt" class="w-full h-48 object-cover">
+            <div class="p-4">
+              <h3 class="text-xl font-semibold text-gray-800">The Ultimate ClickUp Tee</h3>
+              <p class="text-gray-600 text-sm mb-2">Show your love for productivity with our premium cotton ClickUp T‑shirt.</p>
+              <p class="text-2xl font-bold text-purple-700">$24.99</p>
+            </div>
+          </div>
+          <button id="view-product-btn" class="primary-btn mt-6">View Product</button>
+        </section>
+
+        <!-- 2 ─ Product detail -->
+        <section id="product-detail-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">The Ultimate ClickUp Tee</h2>
+          <div class="w-full h-48 bg-gray-200 rounded-xl overflow-hidden flex items-center justify-center shadow-md">
+            <img src="https://placehold.co/600x300/6B46C1/FFFFFF?text=ClickUp+T‑Shirt" alt="ClickUp T‑Shirt" class="object-cover w-full h-full">
+          </div>
+          <p class="text-gray-600 text-center px-2">Premium cotton, soft‑touch print, and ready for your next big task!</p>
+          <div class="flex items-center justify-center space-x-4 w-full">
+            <div class="flex flex-col items-center">
+              <label for="size-desktop" class="text-sm font-medium text-gray-700">Size</label>
+              <select id="size-desktop" class="form-input w-24">
+                <option>S</option><option>M</option><option selected>L</option><option>XL</option>
+              </select>
+            </div>
+            <div class="flex flex-col items-center">
+              <label for="quantity-desktop" class="text-sm font-medium text-gray-700">Qty</label>
+              <input id="quantity-desktop" type="number" value="1" min="1" class="form-input w-20 text-center">
+            </div>
+          </div>
+          <p class="text-3xl font-bold text-purple-700 mt-4">$24.99</p>
+          <button id="add-to-cart-btn-desktop" class="primary-btn mt-6">Add to Cart</button>
+        </section>
+
+        <!-- 3 ─ Cart -->
+        <section id="cart-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Cart</h2>
+          <div class="w-full bg-white rounded-xl shadow-md overflow-hidden p-4">
+            <div class="flex items-center justify-between border-b pb-3 mb-3 border-gray-200">
+              <div class="flex items-center space-x-3">
+                <img src="https://placehold.co/60x60/6B46C1/FFFFFF?text=Tee" alt="" class="w-16 h-16 rounded-lg object-cover">
+                <div>
+                  <p id="cart-item-name" class="font-semibold text-gray-800">ClickUp Tee (L)</p>
+                  <p class="text-gray-500 text-sm">Quantity: <span id="cart-item-qty">1</span></p>
+                </div>
+              </div>
+              <p id="cart-item-price" class="font-bold text-gray-800">$24.99</p>
+            </div>
+            <div class="flex justify-between mt-4 text-xl">
+              <span class="font-semibold">Subtotal</span>
+              <span id="cart-subtotal" class="font-bold text-purple-700">$24.99</span>
+            </div>
+          </div>
+          <button id="add-more-items-main-btn" class="secondary-btn mt-6">Add More Items</button>
+          <button id="proceed-to-checkout-btn-desktop" class="primary-btn mt-6">Proceed to Checkout</button>
+        </section>
+
+        <!-- 3a ─ Empty cart -->
+        <section id="empty-cart-screen" class="screen items-center justify-center text-center space-y-6 p-6 w-full max-w-lg">
+          <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5m0 0L3 3M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4m-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          <h2 class="text-2xl font-bold">Your Cart is Empty!</h2>
+          <button id="learn-more-btn" class="primary-btn">Learn More</button>
+        </section>
+
+        <!-- 4 ─ Checkout options -->
+        <section id="checkout-options-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Checkout</h2>
+          <div class="w-full space-y-3">
+            <button id="guest-checkout-btn-desktop" class="primary-btn">Continue as Guest</button>
+            <div class="relative flex items-center py-2"><div class="flex-grow border-t border-gray-300"></div><span class="mx-4 text-gray-500">OR</span><div class="flex-grow border-t border-gray-300"></div></div>
+            <button id="login-create-account-btn" class="secondary-btn">Log in / Create Account</button>
+          </div>
+        </section>
+
+        <!-- 4a ─ Login/signup stub -->
+        <section id="login-signup-screen" class="screen items-center space-y-6 w-full max-w-lg text-center">
+          <h2 class="text-2xl font-bold">Welcome Back / Join Us</h2>
+          <p class="text-gray-600 text-sm max-w-sm">
+            <strong>End of MVP flow.</strong><br>Authentication is out‑of‑scope for this prototype.
+          </p>
+          <button id="return-to-guest-checkout-btn" class="text-purple-600 underline">Return to Guest Checkout</button>
+        </section>
+
+        <!-- 5 ─ Shipping info (form) -->
+        <section id="shipping-info-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold">Shipping Information</h2>
+          <form id="shipping-form-desktop" class="w-full space-y-4">
+            <div><label class="block text-sm font-medium text-gray-700" for="full-name-desktop">Full Name</label><input id="full-name-desktop" required placeholder="John Doe" class="form-input"/><p id="full-name-error" class="field-error">error</p></div>
+            <div><label class="block text-sm font-medium text-gray-700" for="address-line1-desktop">Address Line 1</label><input id="address-line1-desktop" required placeholder="123 Main St" class="form-input"/><p id="address-line1-error" class="field-error">error</p></div>
+            <div><label class="block text-sm font-medium text-gray-700" for="address-line2-desktop">Address Line 2 (Optional)</label><input id="address-line2-desktop" class="form-input"/></div>
+            <div class="flex space-x-4">
+              <div class="flex-1"><label class="block text-sm font-medium text-gray-700" for="city-desktop">City</label><input id="city-desktop" required placeholder="Anytown" class="form-input"/><p id="city-error" class="field-error">error</p></div>
+              <div class="flex-1"><label class="block text-sm font-medium text-gray-700" for="state-desktop">State</label><input id="state-desktop" maxlength="2" required placeholder="CA" class="form-input"/><p id="state-error" class="field-error">error</p></div>
+            </div>
+            <div><label class="block text-sm font-medium text-gray-700" for="zip-code-desktop">Zip Code</label><input id="zip-code-desktop" maxlength="5" required placeholder="90210" class="form-input"/><p id="zip-code-error" class="field-error">error</p></div>
+
+            <!-- Billing address toggle -->
+            <fieldset class="mt-2 text-sm"><legend class="font-medium text-gray-700">Billing Address</legend>
+              <label class="flex items-center"><input type="radio" name="bill" id="billing-same-as-shipping-radio" checked class="h-4 w-4 text-purple-600"><span class="ml-2">Same as shipping</span></label>
+              <label class="flex items-center"><input type="radio" name="bill" id="billing-different-radio" class="h-4 w-4 text-purple-600"><span class="ml-2">Different billing address</span></label>
+            </fieldset>
+
+            <button id="continue-to-payment-btn" disabled class="primary-btn mt-4">Continue to Payment</button>
+          </form>
+        </section>
+
+        <!-- 5b ─ Payment‑method choice -->
+        <section id="payment-method-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold">Choose a payment method</h2>
+          <button data-method="card"   class="primary-btn">Credit / Debit Card</button>
           <button data-method="paypal" class="secondary-btn">PayPal</button>
           <button data-method="affirm" class="secondary-btn">Pay‑in‑4 (Affirm)</button>
-          <p class="text-xs text-gray-500 max-w-xs text-center pt-2">Selecting an option will take you to the appropriate secure checkout flow.</p>
+          <p class="text-xs text-gray-500 text-center pt-2 max-w-xs">Selecting an option will take you to the appropriate secure checkout flow.</p>
         </section>
-        <!-- 6 — card-payment form -->
-        <section id="payment-info-screen" class="screen"> … </section>
-        <!-- 7 — review -->
-        <section id="review-order-screen" class="screen"> … </section>
-        <!-- 8 — confirmation -->
-        <section id="confirmation-screen" class="screen"> … </section>
+
+        <!-- 6 ─ Card payment form -->
+        <section id="payment-info-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold">Payment Information</h2>
+          <form id="payment-form-desktop" class="w-full space-y-4">
+            <div><label class="block text-sm font-medium text-gray-700" for="card-number-desktop">Card Number</label><input id="card-number-desktop" maxlength="19" required placeholder="•••• •••• •••• ••••" class="form-input"/><p id="card-number-error" class="field-error">error</p></div>
+            <div class="flex space-x-4">
+              <div class="flex-1"><label class="block text-sm font-medium text-gray-700" for="expiry-date-desktop">Expiry (MM/YY)</label><input id="expiry-date-desktop" maxlength="5" required placeholder="MM/YY" class="form-input"/><p id="expiry-date-error" class="field-error">error</p></div>
+              <div class="flex-1"><label class="block text-sm font-medium text-gray-700" for="cvc-desktop">CVC</label><input id="cvc-desktop" maxlength="4" required placeholder="•••" class="form-input"/><p id="cvc-error" class="field-error">error</p></div>
+            </div>
+            <div><label class="block text-sm font-medium text-gray-700" for="card-name-desktop">Name on Card</label><input id="card-name-desktop" required placeholder="John Doe" class="form-input"/><p id="card-name-error" class="field-error">error</p></div>
+
+            <!-- Billing‑address fields -->
+            <div id="billing-address-fields" class="hidden space-y-4">
+              <h3 class="text-lg font-semibold">Billing Information</h3>
+              <div><label class="block text-sm font-medium text-gray-700" for="billing-address-line1">Address Line 1</label><input id="billing-address-line1" class="form-input"/><p id="billing-address-line1-error" class="field-error">error</p></div>
+              <div><label class="block text-sm font-medium text-gray-700" for="billing-address-line2">Address Line 2 (Optional)</label><input id="billing-address-line2" class="form-input"/></div>
+              <div class="flex space-x-4">
+                <div class="flex-1"><label class="block text-sm font-medium text-gray-700" for="billing-city">City</label><input id="billing-city" class="form-input"/><p id="billing-city-error" class="field-error">error</p></div>
+                <div class="flex-1"><label class="block text-sm font-medium text-gray-700" for="billing-state">State</label><input id="billing-state" maxlength="2" class="form-input"/><p id="billing-state-error" class="field-error">error</p></div>
+              </div>
+              <div><label class="block text-sm font-medium text-gray-700" for="billing-zip-code">Zip Code</label><input id="billing-zip-code" maxlength="5" class="form-input"/><p id="billing-zip-code-error" class="field-error">error</p></div>
+            </div>
+
+            <button id="review-order-btn" disabled class="primary-btn mt-4">Review Order</button>
+          </form>
+        </section>
+
+        <!-- 7 ─ Review order -->
+        <section id="review-order-screen" class="screen items-center space-y-4 w-full max-w-lg">
+          <h2 class="text-2xl font-bold">Review Your Order</h2>
+          <div class="w-full bg-white rounded-xl shadow-md p-4 space-y-3">
+            <h3 class="text-lg font-semibold">Shipping To</h3>
+            <p id="review-shipping-name">John Doe</p><p id="review-shipping-address1">123 Main St</p><p id="review-shipping-address2">Anytown, CA 90210</p>
+            <button id="edit-shipping-btn-desktop" class="edit-btn">Edit Shipping</button>
+          </div>
+          <div class="w-full bg-white rounded-xl shadow-md p-4 space-y-3">
+            <h3 class="text-lg font-semibold">Payment Method</h3>
+            <p id="review-payment-method">Visa ending •••• 1234</p>
+            <p id="review-billing-address-text"></p>
+            <button id="edit-payment-btn-desktop" class="edit-btn">Edit Payment</button>
+          </div>
+          <button id="place-order-btn-desktop" class="primary-btn mt-4">Place Order</button>
+        </section>
+
+        <!-- 8 ─ Confirmation -->
+        <section id="confirmation-screen" class="screen items-center justify-center text-center space-y-6 p-6 w-full max-w-lg">
+          <svg class="w-24 h-24 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4‑4m6 2a9 9 0 11‑18 0 9 9 0 0118 0z"/></svg>
+          <h2 class="text-3xl font-bold">Order Confirmed!</h2>
+          <p class="text-gray-600">We’ll email you a confirmation shortly.</p>
+          <button id="continue-shopping-btn" class="primary-btn">Continue Shopping</button>
+        </section>
       </div>
-      <!-- sidebar summary (right) -->
-      <aside class="desktop-sidebar hidden md:flex flex-col"> … </aside>
+
+      <!-- RIGHT – sidebar summary -->
+      <aside class="desktop-sidebar hidden md:flex flex-col">
+        <h3 id="order-summary-title-sidebar" class="text-2xl font-bold text-purple-800 mb-6">Your Cart Summary</h3>
+        <div class="order-summary-card w-full mb-4">
+          <div class="flex justify-between"><span>ClickUp Tee (<span id="summary-size">L</span> × <span id="summary-qty">1</span>)</span><span id="summary-item-price">$24.99</span></div>
+          <div class="flex justify-between"><span>Shipping</span><span id="summary-shipping">$5.00</span></div>
+          <div class="flex justify-between border-b border-purple-200 pb-2 mb-2"><span>Tax (8%)</span><span id="summary-tax">$2.00</span></div>
+          <div class="flex justify-between text-xl font-bold"><span>Total</span><span id="summary-total">$31.99</span></div>
+        </div>
+        <button id="summary-edit-cart" class="edit-btn mb-3">Edit Cart</button>
+        <button id="sidebar-add-more-items-btn" class="primary-btn">Add More Items</button>
+      </aside>
     </main>
-    <!-- toast -->
-    <div id="message-box" class="fixed inset-x-0 bottom-4 mx-auto w-11/12 max-w-sm bg-gray-800 text-white p-4 rounded-lg shadow-lg text-center hidden z-50"><p id="message-content"></p><button id="message-box-close" class="absolute right-2 top-1 text-xl font-bold">&times;</button></div>
+
+    <!-- Toast / message box -->
+    <div id="message-box" class="fixed inset-x-0 bottom-4 mx-auto w-11/12 max-w-sm bg-gray-800 text-white p-4 rounded-lg shadow-lg text-center hidden z-50" role="alert">
+      <p id="message-content"></p><button id="message-box-close" class="absolute top-1 right-2 text-xl font-bold">&times;</button>
+    </div>
   </div>
 
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const S=id=>document.getElementById(id);
+  <!-- =================================================================== -->
+  <!-- ======================  BUSINESS LOGIC JS  ======================== -->
+  <!-- =================================================================== -->
+  <script>
+  document.addEventListener("DOMContentLoaded",()=>{
+    /* -------- Helper  -------- */
+    const S=id=>document.getElementById(id);
+    const qs=new URLSearchParams(location.search);
+    const variant=qs.get("variant")||"A";          /* grabbed but not auto‑navigating */
 
-  /* register ALL screens, incl. payment‑method */
-  const screens={
-    'product-listing-screen':S('product-listing-screen'),
-    'product-detail-screen' :S('product-detail-screen'),
-    'cart-screen'           :S('cart-screen'),
-    'checkout-options-screen':S('checkout-options-screen'),
-    'login-signup-screen'   :S('login-signup-screen'),
-    'shipping-info-screen'  :S('shipping-info-screen'),
-    'payment-method-screen' :S('payment-method-screen'), // <‑‑ added
-    'payment-info-screen'   :S('payment-info-screen'),
-    'review-order-screen'   :S('review-order-screen'),
-    'confirmation-screen'   :S('confirmation-screen')
-  };
+    /* -------- DOM refs -------- */
+    const screens={list:"product-listing-screen",detail:"product-detail-screen",cart:"cart-screen",empty:"empty-cart-screen",co:"checkout-options-screen",login:"login-signup-screen",ship:"shipping-info-screen",pmethod:"payment-method-screen",pay:"payment-info-screen",review:"review-order-screen",confirm:"confirmation-screen"};
+    Object.keys(screens).forEach(k=>screens[k]=S(screens[k]));
+    let currentScreen="list";const historyStack=[currentScreen];
 
-  /* nav helper */
-  let cur='product-listing-screen', hist=['product-listing-screen'];
-  function nav(id,push=true){Object.values(screens).forEach(s=>{s.classList.remove('active');s.style.display='none';});screens[id].style.display='flex';screens[id].classList.add('active');cur=id;if(push&&hist.at(-1)!==id)hist.push(id);window.scrollTo(0,0);}  
-  S('back-btn').onclick=()=>{if(hist.length>1){hist.pop();nav(hist.at(-1),false);}};
+    const backBtn=S("back-btn"),headerTitle=S("header-title"),screenContainer=S("screen-container");
 
-  /* minimal toast util */
-  const show=(msg)=>{S('message-content').textContent=msg;S('message-box').classList.remove('hidden');setTimeout(()=>S('message-box').classList.add('hidden'),4000);} ;
-  S('message-box-close').onclick=()=>S('message-box').classList.add('hidden');
+    /* ---- cart data ---- */
+    let cart={item:{name:"ClickUp Tee",size:"L",price:24.99,qty:1},ship:5,taxRate:.08,total:31.99};
 
-  /* get key elements */
-  const shippingForm=S('shipping-form-desktop');
-  const paymentForm=S('payment-form-desktop');
-  const billingDifferentRadio=S('billing-different-radio');
-  const billingAddressFields=S('billing-address-fields');
-  const methodBtns=S('payment-method-screen').querySelectorAll('button[data-method]');
+    /* ---- Navigation ---- */
+    const titles={list:"ClickUp Swag Store",detail:"Product Details",cart:"Your Cart",empty:"Your Cart",co:"Checkout",login:"Account Access",ship:"Shipping Information",pmethod:"Payment Method",pay:"Payment Information",review:"Review Your Order",confirm:"Order Confirmed!"};
 
-  /* SIMPLE validator stub (replace with yours) */
-  const validateFormOnSubmit=()=>true;
-
-  /* ‑‑‑ shipping → method‑picker ‑‑‑ */
-  shippingForm.addEventListener('submit',e=>{e.preventDefault();if(validateFormOnSubmit())nav('payment-method-screen');});
-
-  /* remove *old* duplicate listener that jumped straight to card —‑ so none exists now */
-
-  /* method buttons */
-  methodBtns.forEach(btn=>btn.addEventListener('click',()=>{
-    const m=btn.dataset.method;
-    if(m==='card'){
-      billingAddressFields.classList.toggle('hidden',!billingDifferentRadio.checked);
-      nav('payment-info-screen');
-    }else if(m==='paypal'){
-      show('Redirecting to PayPal …');setTimeout(()=>nav('confirmation-screen'),1200);
-    }else{
-      show('Opening Affirm modal …');setTimeout(()=>nav('confirmation-screen'),1200);
+    function navigateTo(id,push=true){
+      Object.values(screens).forEach(el=>{el.classList.remove("active");el.style.display="none"});
+      screens[id].classList.add("active");screens[id].style.display="flex";currentScreen=id;
+      headerTitle.textContent=titles[id]||"";
+      if(push&&historyStack[historyStack.length-1]!==id)historyStack.push(id);
+      screenContainer.scrollTop=0;
+      S("order-summary-title-sidebar").textContent= ["list","detail","cart","empty"].includes(id)?"Your Cart Summary":"Order Summary";
     }
-  }));
+    backBtn.onclick=()=>{if(historyStack.length>1){historyStack.pop();navigateTo(historyStack.pop(),false);}};
 
-  /* rest of your original JS (validation, analytics, etc.) would sit here unchanged */
-});
-</script>
+    /* ---- Utility: toast ---- */
+    const msg=S("message-box"),msgTxt=S("message-content"),msgClose=S("message-box-close");
+    const toast=t=>{msgTxt.innerHTML=t;msg.classList.remove("hidden");setTimeout(()=>msg.classList.add("hidden"),3500);};
+    msgClose.onclick=()=>msg.classList.add("hidden");
+
+    /* ---- Update order summary ---- */
+    function refreshSummary(){
+      const sub=cart.item.price*cart.item.qty;
+      const tax=sub*cart.taxRate;
+      cart.total=sub+cart.ship+tax;
+      S("summary-size").textContent=cart.item.size;
+      S("summary-qty").textContent=cart.item.qty;
+      ["item-price","shipping","tax","total"].forEach(key=>{
+        S(`summary-${key}`).textContent=`$${(key==="item-price"?sub:key==="shipping"?cart.ship:key==="tax"?tax:cart.total).toFixed(2)}`;
+      });
+      S("cart-item-name").textContent=`${cart.item.name} (${cart.item.size})`;
+      S("cart-item-qty").textContent=cart.item.qty;
+      S("cart-item-price").textContent=`$${sub.toFixed(2)}`;
+      S("cart-subtotal").textContent=`$${sub.toFixed(2)}`;
+    }
+    refreshSummary();
+
+    /* ---- Product listing / detail ---- */
+    S("view-product-btn").onclick=()=>{navigateTo("detail");};
+    S("add-to-cart-btn-desktop").onclick=()=>{
+      cart.item.size=S("size-desktop").value;
+      cart.item.qty=parseInt(S("quantity-desktop").value,10)||1;
+      refreshSummary();toast("Item added to cart!");navigateTo("cart");
+    };
+
+    /* ---- Cart actions ---- */
+    S("add-more-items-main-btn").onclick=()=>navigateTo("list");
+    S("proceed-to-checkout-btn-desktop").onclick=()=>navigateTo("co");
+
+    /* ---- Checkout options ---- */
+    S("guest-checkout-btn-desktop").onclick=()=>navigateTo("ship");
+    S("login-create-account-btn").onclick=()=>navigateTo("login");
+    S("return-to-guest-checkout-btn").onclick=()=>navigateTo("co");
+
+    /* ---- Shipping form – very light validation ---- */
+    const shipForm=S("shipping-form-desktop");
+    const shipRequired=shipForm.querySelectorAll("input[required]");
+    shipRequired.forEach(inp=>inp.oninput=()=>S("continue-to-payment-btn").disabled=[...shipRequired].some(i=>!i.value.trim()));
+    shipForm.onsubmit=e=>{e.preventDefault();if(S("continue-to-payment-btn").disabled)return;navigateTo("pmethod");};
+
+    /* ---- Payment‑method screen ---- */
+    S("payment-method-screen").querySelectorAll("button[data-method]").forEach(btn=>{
+      btn.onclick=()=>{
+        const m=btn.dataset.method;
+        if(m==="card"){navigateTo("pay");}
+        else{toast(`Mock ${m==="paypal"?"PayPal":"Affirm"} flow – skipping to confirmation.`);setTimeout(()=>navigateTo("confirm"),1200);}
+      };
+    });
+
+    /* ---- Payment form (card) ---- */
+    const payForm=S("payment-form-desktop");
+    const payRequired=payForm.querySelectorAll("input[required]");
+    const payBtn=S("review-order-btn");
+    payRequired.forEach(inp=>inp.oninput=()=>payBtn.disabled=[...payRequired].some(i=>!i.value.trim()));
+    payForm.onsubmit=e=>{
+      e.preventDefault();if(payBtn.disabled)return;
+      S("review-payment-method").textContent=`Visa ending •••• ${S("card-number-desktop").value.slice(-4)}`;
+      if(S("billing-same-as-shipping-radio").checked){S("review-billing-address-text").textContent="Billing address same as shipping.";}
+      else{S("review-billing-address-text").textContent="Separate billing address supplied.";}
+      navigateTo("review");
+    };
+
+    /* ---- Review screen ---- */
+    S("place-order-btn-desktop").onclick=()=>{toast("Placing order…");setTimeout(()=>navigateTo("confirm"),1200);};
+    S("edit-shipping-btn-desktop").onclick=()=>navigateTo("ship");
+    S("edit-payment-btn-desktop").onclick=()=>navigateTo("pay");
+
+    /* ---- Confirmation ---- */
+    S("continue-shopping-btn").onclick=()=>{toast("Thanks! Looping back to listing.");navigateTo("list");};
+
+    /* ---- Sidebar shortcuts ---- */
+    S("sidebar-add-more-items-btn").onclick=S("add-more-items-main-btn").onclick;
+    S("summary-edit-cart").onclick=()=>navigateTo("detail");
+
+    /* ---- Handle variant flag (currently only tracked for analytics) ---- */
+    console.log("Variant flag =",variant);
+  });
+  </script>
 </body>
 </html>
