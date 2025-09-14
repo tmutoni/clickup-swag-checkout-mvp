@@ -38,3 +38,6 @@ Tools/Concepts: Git/GitHub for version control, Responsive Design Principles, Us
 Impact & Learning Outcomes:
 
 This project significantly enhanced my skills in front-end development, particularly in building interactive, data-driven web forms with complex validation logic. It provided valuable experience in translating design concepts into functional prototypes and understanding the importance of progressive disclosure and empathetic error handling in user experience. The mock integration with analytics and CRM systems also deepened my appreciation for how front-end interactions contribute to broader business and support operations.
+CUSTOMER JOURNEY MAP, PURCHASE EXPERIENCE: https://app.clickup.com/90131917330/whiteboards/2ky4fugj-513 
+
+LINK TO PROJECT: https://docs.google.com/presentation/d/1eJuTX5nSW4q6MoTYmHhJ6eeg0zumq-fXXmqT5uLJSAI/edit?usp=sharing
